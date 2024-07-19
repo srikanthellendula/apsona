@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notes</title>
+  <link rel="stylesheet" href="styles.css"> <!-- Link to your CSS file -->
+</head>
+<body>
+  <div class="container-layout">
+    <!-- Side Navigation -->
+    <nav class="side-nav">
+      <ul>
+        <li><a href="#" id="allNotesNav" class="active">Notes</a></li>
+        <li><a href="#" id="trashNav">Trash</a></li>
+        <li><a href="#" id="archiveNav">Archive</a></li>
+        <li><a href="#" id="labelNav">Labels</a></li>
+      </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Search Box -->
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search notes...">
+        <button type="button" id="addNoteBtn">Add Note</button>
+      </div>
+
+      <!-- Note Input Container -->
+      <div class="note-input-container" id="noteInputContainer" style="display: none;">
+        <input type="text" id="noteTitle" placeholder="Note Title">
+        <textarea id="noteDescription" placeholder="Enter your note here..."></textarea>
+        <button type="button" id="saveNoteBtn">Save Note</button>
+        <p id="error-message" style="color: red; display: none;">Please enter a title and a description.</p>
+      </div>
+
+      <!-- Notes List -->
+      <div class="notes-list" id="notesList">
+        <!-- Notes will be dynamically added here -->
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const notes = [];
+    const trash = [];
+    const archive = [];
+
+    document.getElementById('addNoteBtn').addEventListener('click', function() {
+      document.getElementById('noteInputContainer').style.display = 'block';
+    });
+
+    document.getElementById('saveNoteBtn').addEventListener('click', function() {
+      const noteTitle = document.getElementById('noteTitle').value.trim();
+      const noteDescription = document.getElementById('noteDescription').value.trim();
+      const errorMessage = document.getElementById('error-message');
+
+      if (noteTitle === '' || noteDescription === '') {
+        errorMessage.style.display = 'block';
+      } else {
+        errorMessage.style.display = 'none';
+
+        const note = {
+          title: noteTitle,
+          description: noteDescription
+        };
+
+        notes.push(note);
+        renderNotes();
+
+        document.getElementById('noteTitle').value = '';
+        document.getElementById('noteDescription').value = '';
+        document.getElementById('noteInputContainer').style.display = 'none';
+      }
+    });
+
+    document.getElementById('searchInput').addEventListener('input', function() {
+      const searchQuery = this.value.toLowerCase();
+      renderNotes(searchQuery);
+    });
+
+    document.getElementById('allNotesNav').addEventListener('click', function() {
+      setActiveNav(this);
+      renderNotes();
+    });
+
+    document.getElementById('trashNav').addEventListener('click', function() {
+      setActiveNav(this);
+      renderTrash();
+    });
+
+    document.getElementById('archiveNav').addEventListener('click', function() {
+      setActiveNav(this);
+      renderArchive();
+    });
+
+    function renderNotes(searchQuery = '') {
+      const notesList = document.getElementById('notesList');
+      notesList.innerHTML = '';
+
+      notes.forEach(note => {
+        if (note.title.toLowerCase().includes(searchQuery) || note.description.toLowerCase().includes(searchQuery)) {
+          const noteElement = createNoteElement(note, false);
+          notesList.appendChild(noteElement);
+        }
+      });
+    }
+
+    function renderTrash() {
+      const notesList = document.getElementById('notesList');
+      notesList.innerHTML = '';
+
+      trash.forEach(note => {
+        const noteElement = createNoteElement(note, true);
+        notesList.appendChild(noteElement);
+      });
+    }
+
+    function renderArchive() {
+      const notesList = document.getElementById('notesList');
+      notesList.innerHTML = '';
+
+      archive.forEach(note => {
+        const noteElement = createNoteElement(note, true);
+        notesList.appendChild(noteElement);
+      });
+    }
+
+    function createNoteElement(note, isReadOnly) {
+      const noteElement = document.createElement('div');
+      noteElement.className = 'note';
+
+      const noteTitleElement = document.createElement('h3');
+      noteTitleElement.textContent = note.title;
+
+      const noteDescriptionElement = document.createElement('p');
+      noteDescriptionElement.textContent = note.description;
+
+      noteElement.appendChild(noteTitleElement);
+      noteElement.appendChild(noteDescriptionElement);
+
+      if (!isReadOnly) {
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Edit';
+        editButton.addEventListener('click', function() {
+          document.getElementById('noteTitle').value = note.title;
+          document.getElementById('noteDescription').value = note.description;
+          document.getElementById('noteInputContainer').style.display = 'block';
+          notes.splice(notes.indexOf(note), 1);
+          renderNotes();
+        });
+        noteElement.appendChild(editButton);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', function() {
+          trash.push(note);
+          notes.splice(notes.indexOf(note), 1);
+          renderNotes();
+        });
+        noteElement.appendChild(deleteButton);
+
+        const archiveButton = document.createElement('button');
+        archiveButton.textContent = 'Archive';
+        archiveButton.addEventListener('click', function() {
+          archive.push(note);
+          notes.splice(notes.indexOf(note), 1);
+          renderNotes();
+        });
+        noteElement.appendChild(archiveButton);
+      }
+
+      return noteElement;
+    }
+
+    function setActiveNav(activeNav) {
+      const navLinks = document.querySelectorAll('.side-nav ul li a');
+      navLinks.forEach(navLink => {
+        navLink.classList.remove('active');
+      });
+      activeNav.classList.add('active');
+    }
+  </script>
+</body>
+</html>
